@@ -3,9 +3,10 @@
 # Derived from AVR Crosspack template
 #
 
-DEVICE     = attiny85           # See avr-help for all possible devices
-CLOCK      = 4000000            # Clock speed
-PROGRAMMER = -c usbtiny -P usb # For using Adafruit USBtiny
+DEVICE     = attiny45           # See avr-help for all possible devices
+CLOCK      = 8000000            # Clock speed
+#PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
+PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
 LFUSE      = 0xD2
 HFUSE      = 0xDF
 EFUSE      = 0xFF
@@ -21,7 +22,7 @@ CPPFLAGS = -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 CXXFLAGS = 
 CFLAGS = -std=c99
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -v -v -v
 
 C_FILES = \
 	main.c \

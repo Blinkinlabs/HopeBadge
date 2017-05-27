@@ -73,7 +73,7 @@
   #define IR_USE_TIMER1   // tx = pin 9
 
 // Attiny85
-#elif defined(__AVR_ATtiny85__)
+#elif defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny25__)
   #define IR_USE_TIMER0   // tx = N/A
 
 

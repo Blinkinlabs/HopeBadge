@@ -17,29 +17,13 @@
 #include "irremote.h"
 #include "hopebadge.h"
 #include "crc.h"
-#include "seven_cycles_corrected.h"
 
-// Bounce sensitivity, in interrupt counts. Increase to decrease sensitivity
-volatile uint8_t debounceCount;
-
-// Heartbeat speed, in 10ths of a millisecond per sample
-// To convert from BPM to this constant, use the following formula:
-// ((60/BPM/SAMPLES*7)) × 10000
-// or : 8458/bpm
-// where SAMPLES is equal to the heartbeat sample count for seven cycles (497)
-// Examples:
-// 60bpm: 140
-// 150bpm: 56
-volatile uint8_t heartbeatSpeed;
-
-// Number of times the 7-beat pattern is repeated
-volatile uint8_t repeatCount;
-
-// Counter for interrupt-based debounce routine
-volatile uint8_t interruptCount;
+#if 0
 
 // IR Receiver 
 extern decode_results_t results;
+
+
 
 void sleep()
 {
@@ -65,77 +49,6 @@ ISR(INT0_vect) {
     interruptCount++;
 }
 
-// Validate the configuration rates. Do this when they are loaded and when they are changed.
-inline void validateRates() {
-    if(repeatCount > REPEAT_COUNT_MAXIMUM) {
-        repeatCount = REPEAT_COUNT_MAXIMUM;
-    }
-    if(repeatCount < REPEAT_COUNT_MINIMUM) {
-        repeatCount = REPEAT_COUNT_MINIMUM;
-    }
-
-    if(debounceCount > DEBOUNCE_COUNT_MAXIMUM) {
-        debounceCount = DEBOUNCE_COUNT_MAXIMUM;
-    }
-    if(debounceCount < DEBOUNCE_COUNT_MINIMUM) {
-        debounceCount = DEBOUNCE_COUNT_MINIMUM;
-    }
-
-    if(heartbeatSpeed > HEARTBEAT_SPEED_MAXIMUM) {
-        heartbeatSpeed = HEARTBEAT_SPEED_MAXIMUM;
-    }
-    if(heartbeatSpeed < HEARTBEAT_SPEED_MINIMUM) {
-        heartbeatSpeed = HEARTBEAT_SPEED_MINIMUM;
-    }
-}
-
-// Store the configuration rates in EEPROM
-inline void saveRates() {
-    eeprom_write_byte((uint8_t*)DEBOUNCE_COUNT_ADDRESS,   DEBOUNCE_COUNT_DEFAULT);
-    eeprom_write_byte((uint8_t*)REPEAT_COUNT_ADDRESS,     REPEAT_COUNT_DEFAULT);
-    eeprom_write_byte((uint8_t*)HEARTBEAT_SPEED_ADDRESS,  HEARTBEAT_SPEED_DEFAULT);
-    eeprom_write_byte((uint8_t*)MAGIC_HEADER_ADDRESS,     MAGIC_HEADER_VALUE);
-}
-
-// Load the configuration rates from EEPROM, or create from default if they weren't
-// already initialized
-inline void loadRates() {
-    // If the EEPROM wasn't initialized, do so now
-    if(eeprom_read_byte((uint8_t*)MAGIC_HEADER_ADDRESS) != MAGIC_HEADER_VALUE) {
-        debounceCount  = DEBOUNCE_COUNT_DEFAULT;
-        repeatCount    = REPEAT_COUNT_DEFAULT;
-        heartbeatSpeed = HEARTBEAT_SPEED_DEFAULT;
-        saveRates();
-    }
-
-    debounceCount  = eeprom_read_byte((uint8_t*)DEBOUNCE_COUNT_ADDRESS);
-    repeatCount    = eeprom_read_byte((uint8_t*)REPEAT_COUNT_ADDRESS);
-    heartbeatSpeed = eeprom_read_byte((uint8_t*)HEARTBEAT_SPEED_ADDRESS);
-}
-
-// Play back one loop of the heartbeat signal
-// Duration: nominal 7 seconds at 60 BPM
-void playEKG() {
-    uint8_t sample;
-
-    for(uint16_t loop = 0; loop < repeatCount; loop++) {
-        for(uint16_t position = 0; position < EKG_DATA_LENGTH; position++) {
-            sample = pgm_read_byte(&ekgData[position]);
-
-            setLEDs(sample);
-
-            // make a delay based on the heartbeat speed
-            for(uint16_t count = 0; count < heartbeatSpeed; count++) {
-                _delay_us(100);
-            }
-
-            // And hit the watchdog
-            wdt_reset();
-        }
-    }
-
-    setLEDs(0);
-}
 
 // Listen for an IR command
 // Duration: 4+ seconds
@@ -188,6 +101,7 @@ void monitorIR() {
     }
 }
 
+#endif
 
 // program entry point
 // Kinda sad that the production devices will only run this once T_T
@@ -209,11 +123,6 @@ int main(void) {
         "r" ((uint8_t) 1)  // new CLKPR value 0=8MHz, 1=4MHz, 2=2MHz, 3=1MHz)
     );
 
-    bitSet(DDRB,    PIN_LED_ON);
-    bitSet(PORTB,   PIN_LED_ON);
-    _delay_us(20);
-    bitClear(PORTB, PIN_LED_ON);
-    _delay_us(20);
 
     bitSet(ACSR, ACD);          // Disable the analog comparitor
     bitClear(ADCSRA, ADEN);     // Disable the ADC
@@ -228,52 +137,45 @@ int main(void) {
     MCUCR &= ~(_BV(ISC01) | _BV(ISC00));    // INT0 on low level
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Use power down mode for sleep
 
-    // Set up timer1 to do PWM output to the LEDs (OC1A)
-    OCR1C = 0xFF;
-    TCCR1 = _BV(PWM1A) | _BV(COM1A1) | _BV(CS10);
+    // Set the LEDs to outputs and disable
+    bitSet(DDRB,    PIN_LED1);
+    bitSet(PORTB,   PIN_LED1);
+    bitSet(DDRB,    PIN_LED2);
+    bitSet(PORTB,   PIN_LED2);
+    bitSet(DDRB,    PIN_LED3);
+    bitSet(PORTB,   PIN_LED3);
 
-    // Load configuration from EEPROM and validate it
-    loadRates();
-    validateRates();
-
-    // Main loop. The first thing that we do is turn off peripherals that we don't need,
-    // then we go to sleep. When woken up, run a quick debounce routine to determine if we
-    // should go into LED display mode, and at the completion go back to sleep.
+    // Main loop.
     for(;;){
+        // Sleep using a timer countdown
 
-        // Disable the IR timer
-        disableIRIn();
+        // Enable IR Receiver
 
-        // Turn off the LED outputs before disabling the pins
-        setLEDs(0);
-        _delay_ms(1);
+        // Wait for IR reciver
 
-        // Set all I/O pins to input, and pull-up resistors for floating pins
-        DDRB = 0;
-        PORTB = _BV(PIN_UNUSED);
+        // Disable IR receiver
 
-        // Disable the watchdog
-        wdt_disable();
+        // IR signal received?
 
-        // Go to sleep
-        sleep();
+        // no: continue
 
-        // Re-enable the watchdog
-        wdt_enable(WDTO_2S);
+        // yes:
 
-        // Do a quick debounce check, to discard small shakes
-        if(interruptCount < debounceCount) {
-            continue;
-        }
+        // Play LED pattern
 
-        // Set the LED pin as a output, and enable the IR receiver
-        DDRB = _BV(PIN_LED_ON) | _BV(PIN_IR_POWER);
-        PORTB = _BV(PIN_UNUSED) | _BV(PIN_IR_POWER);
+        // disable LEDs
 
-        // First play the heartbeat pattern back
-        playEKG();
-        // Finally, monitor the IR input
-        monitorIR();
+
+        bitSet(PORTB, PIN_LED3);
+        bitClear(PORTB, PIN_LED1);
+        _delay_ms(500);
+        bitSet(PORTB, PIN_LED1);
+        bitClear(PORTB, PIN_LED2);
+        _delay_ms(500);
+        bitSet(PORTB, PIN_LED2);
+        bitClear(PORTB, PIN_LED3);
+        _delay_ms(500);
+
     }
     
     return 0;   /* never reached */
