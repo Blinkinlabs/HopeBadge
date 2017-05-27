@@ -4,11 +4,11 @@
 #
 
 DEVICE     = attiny45           # See avr-help for all possible devices
-CLOCK      = 8000000            # Clock speed
+CLOCK      = 4000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
 PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
-LFUSE      = 0xD2
-HFUSE      = 0xDF
+LFUSE      = 0x42
+HFUSE      = 0xDE
 EFUSE      = 0xFF
 FUSES      = -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m -U efuse:w:$(EFUSE):m  # settings as taken from http://www.engbedded.com/fusecalc/
 
@@ -20,15 +20,15 @@ CXX = avr-g++
 
 CPPFLAGS = -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 CXXFLAGS = 
-CFLAGS = -std=c99
+CFLAGS = -std=c11
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -v -v -v
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 
 C_FILES = \
 	main.c \
+        hopebadge.c \
 	irremote.c \
-        crc.c \
-        hopebadge.c
+        crc.c
 
 
 CPP_FILES = 

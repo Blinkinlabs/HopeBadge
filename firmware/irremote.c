@@ -20,6 +20,8 @@
  * LG added by Darryl Smith (based on the JVC protocol)
  */
 
+#include "hopebadge.h"
+
 #include "irremote.h"
 #include "irremoteint.h"
 

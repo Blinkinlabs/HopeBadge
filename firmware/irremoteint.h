@@ -26,7 +26,6 @@
 //// Arduino Shim //////
 #include <stdint.h>
 
-#include "hopebadge.h"
 //// Arduino Shim //////
 
 // define which timer to use
