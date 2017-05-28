@@ -16,6 +16,8 @@
 #ifndef IRremote_h
 #define IRremote_h
 
+#include <stdint.h>
+
 // The following are compile-time library options.
 // If you change them, recompile the library.
 // If DEBUG is defined, a lot of debugging output will be printed during decoding.
@@ -31,9 +33,9 @@ typedef struct {
 //    unsigned int sharpAddress;
 //  };
   unsigned long value; // Decoded value
-  int bits; // Number of bits in decoded value
-  volatile unsigned int *rawbuf; // Raw intervals in .5 us ticks
-  int rawlen; // Number of records in rawbuf.
+  uint8_t bits; // Number of bits in decoded value
+  volatile uint8_t *rawbuf; // Raw intervals in .5 us ticks
+  uint16_t rawlen; // Number of records in rawbuf.
 } decode_results_t;
 
 // Values for decode_type
