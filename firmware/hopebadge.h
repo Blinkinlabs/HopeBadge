@@ -12,7 +12,7 @@
 
 // System parameters
 #define SLEEP_TIME		500 // Time to sleep between cycles, in ms
-#define IR_MONITOR_TIME         200 // Amount of time to stay awake for IR reception
+#define IR_MONITOR_TIME         150 // Amount of time to stay awake for IR reception
 
 
 #define bit_set(reg, bit) reg |= (1<<bit)

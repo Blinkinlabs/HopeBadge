@@ -65,9 +65,6 @@ static inline void set_cpu_frequency_4mhz() {
 // Listen for an IR command
 // Duration: x seconds
 static inline bool monitor_ir() {
-    // TODO: can we light sleep here?    
-    _delay_ms(IR_MONITOR_TIME); // Wait a while to have a chance at receiving the signal
-
     // If we didn't get an NEC command, bail
     if (!decodeIR()) {
         return false;
@@ -136,44 +133,42 @@ static inline void setup() {
     
     // Disable clicks to peripherals that we aren't using
     // (This saves power in run mode)
-    PRR |= _BV(PRTIM1) | _BV(PRUSI) | _BV(ADC);
+    PRR |= _BV(PRTIM0) | _BV(PRTIM1) | _BV(PRUSI) | _BV(ADC);
     
     // Configure the sleep mode and wakeup interrupt
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Use power down mode for sleep
 }
 
 static inline void loop() {
-    // Sleep using a timer countdown
-    sleep_ms(SLEEP_TIME);
-
     // Enable IR receiver
-    bit_set(PORTB, PIN_IR_ENABLE);
-    enableIRIn(); // Start the receiver
-
-    // Turn on timer0 clock
+    bit_set(PORTB, PIN_IR_ENABLE);  // Power up IR receiver
+    PRR &= ~_BV(PRTIM0); // Turn on timer0 clock
+    enableIRIn(); // Start the IR receiver state machine
 
     // Wait for IR reciver
+    // TODO: can we light sleep here using the watchdog?
+    _delay_ms(IR_MONITOR_TIME); // Wait a while to have a chance at receiving the signal
+
+    // Check if a valid response
     bool got_ir = monitor_ir();
 
-    // Turn off timer0 clock
-
     // Disable IR receiver
-    disableIRIn();
-    bit_clear(PORTB, PIN_IR_ENABLE);
+    disableIRIn();  // Disable IR receiver state machine
+    PRR |= _BV(PRTIM0); // Turn off timer0 clock
+    bit_clear(PORTB, PIN_IR_ENABLE); // Power down IR receiver
 
     // IR signal received?
-    if(!got_ir) {
-        // no: continue
-        return;
+    if(got_ir) {
+        // Play LED pattern
+        flash_lights(10);
+
+        // disable LEDs
+        PORTB |= (1<<PIN_LED1) | (1<<PIN_LED2) | (1<<PIN_LED3);
     }
-
-    // yes:
-
-    // Play LED pattern
-    flash_lights(10);
-
-    // disable LEDs
-    PORTB |= (1<<PIN_LED1) | (1<<PIN_LED2) | (1<<PIN_LED3);
+    else {
+        // Sleep using a watchdog timeout
+        sleep_ms(SLEEP_TIME);
+    }
 }
 
 
