@@ -62,64 +62,47 @@ static inline void set_cpu_frequency_4mhz() {
 }
 
 
-
-
-
-
 // Listen for an IR command
 // Duration: x seconds
 static inline bool monitor_ir() {
-    bool received_signal = false;
+    // TODO: can we light sleep here?    
+    _delay_ms(IR_MONITOR_TIME); // Wait a while to have a chance at receiving the signal
 
-    enableIRIn(); // Start the receiver
-    
-    for(uint32_t irLoop = 0; irLoop < IR_MONITOR_TIME; irLoop++) {
-    
-        _delay_ms(60);  // Derate this to handle processing time of decodeIR() @4MHz
-
-        wdt_reset(); // Hit the watchdog
-
-        // If we didn't get an NEC command, bail
-        if (!decodeIR()) {
-            continue;
-        }
-
-        uint8_t speed =         (results.value >> 24) & 0xFF;
-        uint8_t repeats =       (results.value >> 16) & 0xFF;
-        uint8_t sensitivity =   (results.value >>  8) & 0xFF;
-
-        resetCRC();
-        updateCRC(speed);
-        updateCRC(repeats);
-        updateCRC(sensitivity);
-
-        // If the CRC is valid, store the results.
-        if(getCRC() == (results.value & 0xFF)) {
-            received_signal = true;
-            break;
-        }
-        
-        resumeIR(); // Receive the next value
+    // If we didn't get an NEC command, bail
+    if (!decodeIR()) {
+        return false;
     }
 
-    disableIRIn();
+    uint8_t speed =         (results.value >> 24) & 0xFF;
+    uint8_t repeats =       (results.value >> 16) & 0xFF;
+    uint8_t sensitivity =   (results.value >>  8) & 0xFF;
 
-    return received_signal;
+    resetCRC();
+    updateCRC(speed);
+    updateCRC(repeats);
+    updateCRC(sensitivity);
+
+    // If the CRC is valid, store the results.
+    if(getCRC() != (results.value & 0xFF)) {
+        return false;
+    }
+
+    return true;
 }
 
 
 static inline void flash_lights(uint8_t count) {
     for(uint8_t i = 0; i < count; i++) {
         bit_clear(PORTB, PIN_LED1);
-        _delay_ms(30);
+        sleep_ms(32);
         bit_set(PORTB, PIN_LED1);
 
         bit_clear(PORTB, PIN_LED2);
-        _delay_ms(30);
+        sleep_ms(32);
         bit_set(PORTB, PIN_LED2);
 
         bit_clear(PORTB, PIN_LED3);
-        _delay_ms(30);
+        sleep_ms(32);
         bit_set(PORTB, PIN_LED3);
 
         wdt_reset();
@@ -153,7 +136,7 @@ static inline void setup() {
     
     // Disable clicks to peripherals that we aren't using
     // (This saves power in run mode)
-    PRR |= _BV(PRTIM1) | _BV(PRTIM0) | _BV(PRUSI) | _BV(ADC);
+    PRR |= _BV(PRTIM1) | _BV(PRUSI) | _BV(ADC);
     
     // Configure the sleep mode and wakeup interrupt
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Use power down mode for sleep
@@ -165,21 +148,22 @@ static inline void loop() {
 
     // Enable IR receiver
     bit_set(PORTB, PIN_IR_ENABLE);
-    
-    // Wait for the IR receiver to stabilize
-    // TODO: am needed?
-    _delay_ms(50);
+    enableIRIn(); // Start the receiver
+
+    // Turn on timer0 clock
 
     // Wait for IR reciver
     bool got_ir = monitor_ir();
 
+    // Turn off timer0 clock
+
     // Disable IR receiver
+    disableIRIn();
     bit_clear(PORTB, PIN_IR_ENABLE);
 
     // IR signal received?
     if(!got_ir) {
         // no: continue
-        flash_lights(1);
         return;
     }
 

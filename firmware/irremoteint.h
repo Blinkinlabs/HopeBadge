@@ -548,10 +548,10 @@ extern volatile irparams_t irparams;
 #define BLINKLED       0
 #define BLINKLED_ON()  (PORTD |= B00000001)
 #define BLINKLED_OFF() (PORTD &= B11111110)
-#elif defined(__AVR_ATtiny85__)
+#elif defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny25__)
 #define BLINKLED 0 //TODO
-#define BLINKLED_ON() bitSet(PORTB, PIN_LED_ON)
-#define BLINKLED_OFF() bitClear(PORTB, PIN_LED_ON)
+#define BLINKLED_ON() bit_set(PORTB, PIN_LED1)
+#define BLINKLED_OFF() bit_clear(PORTB, PIN_LED1)
 #else
 #define BLINKLED       13
 #define BLINKLED_ON()  (PORTB |= B00100000)

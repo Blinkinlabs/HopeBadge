@@ -48,8 +48,6 @@ long decodeNEC();
 int compare(unsigned int oldval, unsigned int newval);
 
 
-
-
 // These versions of MATCH, MATCH_MARK, and MATCH_SPACE are only for debugging.
 // To use them, set DEBUG in IRremoteInt.h
 // Normally macros are used for efficiency
@@ -194,16 +192,14 @@ ISR(TIMER_INTR_NAME)
     break;
   }
 
-#if 0
-  if (irparams.blinkflag) {
-    if (irdata == MARK) {
-      BLINKLED_ON();  // turn pin 13 LED on
-    } 
-    else {
-      BLINKLED_OFF();  // turn pin 13 LED off
-    }
+  #if 0
+  if (irdata == MARK) {
+    BLINKLED_ON();  // turn pin 13 LED on
+  } 
+  else {
+    BLINKLED_OFF();  // turn pin 13 LED off
   }
-#endif
+  #endif
 }
 
 void resumeIR() {
