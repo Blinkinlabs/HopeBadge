@@ -15,11 +15,10 @@
 #include <util/delay.h>
 
 #include "hopebadge.h"
+
 #include "irremote.h"
 #include "crc.h"
-
-// IR Receiver 
-extern decode_results_t results;
+#include "sleep.h"
 
 #ifdef SERIAL_DEBUG
 // Bitbang a 9600 baud serial output
@@ -50,7 +49,7 @@ void pulse_out(uint8_t data) {
 
 
 
-void set_cpu_frequency_4mhz() {
+static inline void set_cpu_frequency_4mhz() {
     // Change the clock to 4MHz
     __asm__ volatile (
                       "st Z,%1" "\n\t"
@@ -62,65 +61,14 @@ void set_cpu_frequency_4mhz() {
                       );
 }
 
-void watchdog_setup() {
-    cli();
-    WDTCR = _BV(WDCE) | _BV(WDE);
-    WDTCR |= (_BV(WDP2) | _BV(WDP1));
-    sei();
-}
-
-// Watchdog ISR for sleep routine
-ISR(WDT_vect) {
-    // Interrupt flag is automatically cleared
-
-}
 
 
-// Sleep for the given number of counts with the specified prescaler bits
-void sleep(uint8_t prescaler, int16_t counts) {
-    int16_t sleep_counter = counts;
-    
-    sleep_enable(); // Sets the Sleep Enable bit in the MCUCR Register (SE BIT)
-    
-    while(sleep_counter > 0) {
-        cli();
-        
-        WDTCR = _BV(WDCE) | _BV(WDE);  // Program the watchdog timer as an interrupt with the given prescaler
-        WDTCR |= _BV(WDIE) | prescaler;
-        
-        sei();
-        
-//        sleep_bod_disable();    // Disable brown-out detection during sleep
-        sleep_cpu();            // Go to sleep: We will jump to the WDT_vect on wakeup
-        
-        sleep_counter--;        // When we get back, decrement the sleep counter.
-    }
-    
-    // Reset the original watchdog settings
-    watchdog_setup();
-    
-    sleep_disable(); // Clear SE bit
-}
 
-// Sleep for a short period of time
-// @param milliseconds  Number of milliseconds to sleep, with resolution 16ms
-inline void sleep_ms(int16_t milliseconds)
-{
-    sleep(0, milliseconds/16);
-}
-
-
-// Sleep for some time
-//
-inline void sleep_s(int16_t seconds)
-{
-    sleep(_BV(WDP2) | _BV(WDP1), seconds);
-}
 
 
 // Listen for an IR command
 // Duration: x seconds
-bool monitor_ir() {
+static inline bool monitor_ir() {
     bool received_signal = false;
 
     enableIRIn(); // Start the receiver
@@ -160,7 +108,7 @@ bool monitor_ir() {
 }
 
 
-void flash_lights(uint8_t count) {
+static inline void flash_lights(uint8_t count) {
     for(uint8_t i = 0; i < count; i++) {
         bit_clear(PORTB, PIN_LED1);
         _delay_ms(30);
@@ -180,7 +128,7 @@ void flash_lights(uint8_t count) {
 }
 
 
-void setup() {
+static inline void setup() {
     // Turn on the watchdog
     watchdog_setup();
     
@@ -211,7 +159,7 @@ void setup() {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Use power down mode for sleep
 }
 
-void loop() {
+static inline void loop() {
     // Sleep using a timer countdown
     sleep_ms(SLEEP_TIME);
 
@@ -242,4 +190,15 @@ void loop() {
 
     // disable LEDs
     PORTB |= (1<<PIN_LED1) | (1<<PIN_LED2) | (1<<PIN_LED3);
+}
+
+
+int main(void) {
+    setup();
+    
+    for(;;){
+        loop();
+    }
+    
+    return 0;
 }

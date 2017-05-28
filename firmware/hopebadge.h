@@ -20,11 +20,4 @@
 
 //#define SERIAL_DEBUG
 
-#ifdef SERIAL_DEBUG
-void pulse_out(uint8_t data);
-#endif
-
-void setup();
-void loop();
-
 #endif

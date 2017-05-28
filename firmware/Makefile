@@ -4,6 +4,7 @@
 #
 
 DEVICE     = attiny45           # See avr-help for all possible devices
+#DEVICE     = attiny25           # See avr-help for all possible devices
 CLOCK      = 4000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
 PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
@@ -18,17 +19,22 @@ CC = avr-gcc
 CXX = avr-g++
 
 
-CPPFLAGS = -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+# CPPFLAGS = compiler options for C and C++
+CPPFLAGS = -Wall -O3 -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+
+# compiler options for C++ only
 CXXFLAGS = 
+
+# compiler options for C only
 CFLAGS = -std=c11
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 
 C_FILES = \
-	main.c \
         hopebadge.c \
 	irremote.c \
-        crc.c
+        crc.c \
+        sleep.c
 
 
 CPP_FILES = 
@@ -48,11 +54,6 @@ fuse:
 	$(AVRDUDE) -b 200 -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m -U efuse:w:$(EFUSE):m
 
 install: fuse flash
-
-
-# if you use a bootloader, change the command below appropriately:
-load: all
-	bootloadHID $(TARGET).hex
 
 clean:
 	rm -f $(TARGET).hex $(TARGET).elf $(OBJECTS)

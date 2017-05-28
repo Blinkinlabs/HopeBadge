@@ -69,4 +69,8 @@ void resumeIR();
 // when received due to sensor lag.
 #define MARK_EXCESS 20
 
+
+// IR Receiver 
+extern volatile decode_results_t results;
+
 #endif

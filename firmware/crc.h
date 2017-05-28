@@ -3,13 +3,33 @@
 
 #include <stdint.h>
 
+extern uint8_t crc;
+
 // Reset the CRC engine
-void resetCRC();
+inline void resetCRC() {
+  crc = 0;
+}
 
 // Update the CRC engine
-void updateCRC(uint8_t data);
+inline uint8_t getCRC() {
+  return crc;
+}
 
 // Get the current value of the CRC engine
-uint8_t getCRC();
+inline void updateCRC(uint8_t data) {
+  uint8_t i;
+
+  crc = crc ^ data;
+  for (i = 0; i < 8; i++)
+  {
+    if(crc & 0x01) {
+      crc = (crc >> 1) ^ 0x8C;
+    }
+    else {
+      crc >>= 1;
+    }
+  }
+}
+
 
 #endif
