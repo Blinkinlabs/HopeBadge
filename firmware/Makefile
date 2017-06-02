@@ -3,8 +3,8 @@
 # Derived from AVR Crosspack template
 #
 
-DEVICE     = attiny45           # See avr-help for all possible devices
-#DEVICE     = attiny25           # See avr-help for all possible devices
+#DEVICE     = attiny45           # See avr-help for all possible devices
+DEVICE     = attiny25           # See avr-help for all possible devices
 CLOCK      = 4000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
 PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
