@@ -1,7 +1,21 @@
+# General temp files
 *.DS_Store
 *.swp
+*.lck
 
+# GNU/Make
 firmware/*.hex
 firmware/*.elf
 firmware/*.o
+firmware/*.d
+firmware/*.dfu
 
+# Eagle PCB
+*.[bls]#[0-9]
+*.?##
+
+# Altium
+pcb/History
+pcb/__Previews
+pcb/Project\ Logs\ for\ *
+pcb/Project\ Outputs\ for\ *
