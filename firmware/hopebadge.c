@@ -88,23 +88,22 @@ static inline bool monitor_ir() {
 }
 
 
-static inline void flash_lights(uint8_t count) {
+static inline void flash_lights(uint8_t count, uint8_t delay) {
     for(uint8_t i = 0; i < count; i++) {
         bit_clear(PORTB, PIN_LED1);
-        sleep_ms(32);
+        sleep_ms(delay);
         bit_set(PORTB, PIN_LED1);
 
         bit_clear(PORTB, PIN_LED2);
-        sleep_ms(32);
+        sleep_ms(delay);
         bit_set(PORTB, PIN_LED2);
 
         bit_clear(PORTB, PIN_LED3);
-        sleep_ms(32);
+        sleep_ms(delay);
         bit_set(PORTB, PIN_LED3);
 
         wdt_reset();
    }
-
 }
 
 
@@ -137,6 +136,12 @@ static inline void setup() {
     
     // Configure the sleep mode and wakeup interrupt
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Use power down mode for sleep
+
+    // If the device was reset from the user button, flash the LEDs once before continuing
+    if(MCUSR & _BV(EXTRF)) {
+        flash_lights(FLASH_REPEAT_COUNT, FLASH_DELAY);
+    }
+
 }
 
 static inline void loop() {
@@ -160,7 +165,7 @@ static inline void loop() {
     // IR signal received?
     if(got_ir) {
         // Play LED pattern
-        flash_lights(10);
+        flash_lights(FLASH_REPEAT_COUNT, FLASH_DELAY);
 
         // disable LEDs
         PORTB |= (1<<PIN_LED1) | (1<<PIN_LED2) | (1<<PIN_LED3);
