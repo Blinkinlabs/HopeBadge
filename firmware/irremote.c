@@ -207,6 +207,9 @@ void resumeIR() {
   irparams.rawlen = 0;
 }
 
+bool isReceivingIR() {
+  return ((irparams.rawlen > 5) && (irparams.rcvstate != STATE_STOP));
+}
 
 
 // Decodes the received IR message

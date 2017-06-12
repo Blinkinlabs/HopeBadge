@@ -17,6 +17,7 @@
 #define IRremote_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // The following are compile-time library options.
 // If you change them, recompile the library.
@@ -60,7 +61,7 @@ int decodeIR();
 void enableIRIn();
 void disableIRIn();
 void resumeIR();
-
+bool isReceivingIR();
 
 // Some useful constants
 

@@ -7,18 +7,21 @@
 
 #include <stdbool.h>
 #include <avr/sleep.h>
+#include <avr/delay.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
-#include <util/delay.h>
 
 #include "hopebadge.h"
 
 #include "irremote.h"
 #include "crc.h"
 #include "sleep.h"
+
+uint8_t speed;
+uint8_t repeats;
 
 #ifdef SERIAL_DEBUG
 // Bitbang a 9600 baud serial output
@@ -49,7 +52,7 @@ void pulse_out(uint8_t data) {
 
 
 
-static inline void set_cpu_frequency_4mhz() {
+static inline void set_cpu_frequency_2mhz() {
     // Change the clock to 4MHz
     __asm__ volatile (
                       "st Z,%1" "\n\t"
@@ -57,27 +60,34 @@ static inline void set_cpu_frequency_4mhz() {
                       : :
                       "z" (&CLKPR),
                       "r" ((uint8_t) (1<<CLKPCE)),
-                      "r" ((uint8_t) 1)  // new CLKPR value 0=8MHz, 1=4MHz, 2=2MHz, 3=1MHz)
+                      "r" ((uint8_t) 2)  // new CLKPR value 0=8MHz, 1=4MHz, 2=2MHz, 3=1MHz)
                       );
+}
+
+
+static inline void enable_ir() {
+    bit_set(PORTB, PIN_IR_ENABLE);  // Power up IR receiver
+    PRR &= ~_BV(PRTIM0); // Turn on timer0 clock
+    enableIRIn(); // Start the IR receiver state machine
 }
 
 
 // Listen for an IR command
 // Duration: x seconds
-static inline bool monitor_ir() {
+static inline bool check_ir() {
     // If we didn't get an NEC command, bail
     if (!decodeIR()) {
         return false;
     }
 
-    uint8_t speed =         (results.value >> 24) & 0xFF;
-    uint8_t repeats =       (results.value >> 16) & 0xFF;
-    uint8_t sensitivity =   (results.value >>  8) & 0xFF;
+    repeats =       (results.value >> 24) & 0xFF;
+    speed =         (results.value >> 16) & 0xFF;
+    uint8_t extra = (results.value >>  8) & 0xFF;
 
     resetCRC();
     updateCRC(speed);
     updateCRC(repeats);
-    updateCRC(sensitivity);
+    updateCRC(extra);
 
     // If the CRC is valid, store the results.
     if(getCRC() != (results.value & 0xFF)) {
@@ -87,8 +97,17 @@ static inline bool monitor_ir() {
     return true;
 }
 
+static inline bool check_any_ir() {
+    return (results.rawlen > 10);
+}
 
-static inline void flash_lights(uint8_t count, uint8_t delay) {
+static inline void disable_ir() {
+    disableIRIn();  // Disable IR receiver state machine
+    PRR |= _BV(PRTIM0); // Turn off timer0 clock
+    bit_clear(PORTB, PIN_IR_ENABLE); // Power down IR receiver
+}
+
+static void flash_lights(uint8_t count, uint8_t delay) {
     for(uint8_t i = 0; i < count; i++) {
         bit_clear(PORTB, PIN_LED1);
         sleep_ms(delay);
@@ -101,18 +120,13 @@ static inline void flash_lights(uint8_t count, uint8_t delay) {
         bit_clear(PORTB, PIN_LED3);
         sleep_ms(delay);
         bit_set(PORTB, PIN_LED3);
-
-        wdt_reset();
    }
 }
 
 
 static inline void setup() {
-    // Turn on the watchdog
-    watchdog_setup();
-    
-    // Configure the processor for 4MHz operation (for voltage spec compliance)
-    set_cpu_frequency_4mhz();
+    // Configure the processor for 2MHz operation (save power)
+    set_cpu_frequency_2mhz();
 
     // Set the LEDs to outputs and disable
     DDRB = (1<<PIN_LED1)
@@ -127,18 +141,25 @@ static inline void setup() {
 
     bit_set(ACSR, ACD);          // Disable the analog comparitor
     bit_clear(ADCSRA, ADEN);     // Disable the ADC
+    bit_set(DIDR0, AIN1D);       // Disable digital input buffers
+    bit_set(DIDR0, AIN0D);       //  on AIN1/0 pins
 
     // Note: Watchdog disabled by fuse setting
     
     // Disable clicks to peripherals that we aren't using
     // (This saves power in run mode)
-    PRR |= _BV(PRTIM0) | _BV(PRTIM1) | _BV(PRUSI) | _BV(ADC);
+    PRR |=
+        _BV(PRTIM0)
+        | _BV(PRTIM1)
+        | _BV(PRUSI)
+        | _BV(ADC);
     
     // Configure the sleep mode and wakeup interrupt
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Use power down mode for sleep
 
     // If the device was reset from the user button, flash the LEDs once before continuing
     if(MCUSR & _BV(EXTRF)) {
+        bit_clear(MCUSR, EXTRF);
         flash_lights(FLASH_REPEAT_COUNT, FLASH_DELAY);
     }
 
@@ -146,29 +167,28 @@ static inline void setup() {
 
 static inline void loop() {
     // Enable IR receiver
-    bit_set(PORTB, PIN_IR_ENABLE);  // Power up IR receiver
-    PRR &= ~_BV(PRTIM0); // Turn on timer0 clock
-    enableIRIn(); // Start the IR receiver state machine
+    enable_ir();
 
     // Wait for IR reciver
-    // TODO: can we light sleep here using the watchdog?
-    _delay_ms(IR_MONITOR_TIME); // Wait a while to have a chance at receiving the signal
+    delay_ms(IR_MONITOR_TIME/2);
 
-    // Check if a valid response
-    bool got_ir = monitor_ir();
+    // If we are actively receiving a signal, wait a little longer
+    if(isReceivingIR()) {
+      delay_ms(IR_MONITOR_TIME/2);
+    }
+
 
     // Disable IR receiver
-    disableIRIn();  // Disable IR receiver state machine
-    PRR |= _BV(PRTIM0); // Turn off timer0 clock
-    bit_clear(PORTB, PIN_IR_ENABLE); // Power down IR receiver
+    disable_ir();
 
-    // IR signal received?
-    if(got_ir) {
-        // Play LED pattern
+    // If a valid NEC code was detected, flash the lights using the received
+    // parameters
+    if(check_ir()) {
+        flash_lights(repeats, speed);
+    }
+    // Otherwise, use a generic pattern
+    else if(check_any_ir()) {
         flash_lights(FLASH_REPEAT_COUNT, FLASH_DELAY);
-
-        // disable LEDs
-        PORTB |= (1<<PIN_LED1) | (1<<PIN_LED2) | (1<<PIN_LED3);
     }
     else {
         // Sleep using a watchdog timeout
@@ -176,10 +196,62 @@ static inline void loop() {
     }
 }
 
+//#define TEST_ON
+//#define TEST_SLEEP
+//#define TEST_LED_ON_NOSLEEP
+//#define TEST_LED_ON_SLEEP
+//#define TEST_FLASH_LIGHTS
+//#define TEST_ENABLE_IR
+//#define TEST_ENABLE_DISABLE_IR
 
 int main(void) {
     setup();
+
+    #ifdef TEST_ON
+    while(true)
+        {}
+    #endif
+
+    #ifdef TEST_SLEEP
+    while(true) {
+        sleep_s(5);
+        bit_clear(PORTB, PIN_LED1);
+        sleep_s(1);
+        bit_set(PORTB, PIN_LED1);
+    }
+    #endif
+
+    #ifdef TEST_LED_ON_NOSLEEP
+    bit_clear(PORTB, PIN_LED1);
+    while(true)
+        {}
+    #endif
+
+    #ifdef TEST_LED_ON_SLEEP
+    bit_clear(PORTB, PIN_LED1);
+    while(true)
+        sleep_s(5);
+    #endif
+
+    #ifdef TEST_FLASH_LIGHTS
+    while(true)
+        flash_lights(1,255);    
+    #endif
+
+    #ifdef TEST_ENABLE_IR
+    enable_ir();
+    while(true)
+        {}
+    #endif
+
+    #ifdef TEST_ENABLE_DISABLE_IR
+    enable_ir();
+    disable_ir();
+    while(true)
+        {}
+    #endif
     
+
     for(;;){
         loop();
     }

@@ -5,11 +5,17 @@
 
 #DEVICE     = attiny45           # See avr-help for all possible devices
 DEVICE     = attiny25           # See avr-help for all possible devices
-CLOCK      = 4000000            # Clock speed
+CLOCK      = 2000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
 PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
+
+# Internal oscillator @8MHz
 LFUSE      = 0x42
+
+# Serial Programming enabled, watchdog disabled, reset enabled, brown-out @1.8V
 HFUSE      = 0xDE
+
+# Self-programming disabled
 EFUSE      = 0xFF
 FUSES      = -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m -U efuse:w:$(EFUSE):m  # settings as taken from http://www.engbedded.com/fusecalc/
 
