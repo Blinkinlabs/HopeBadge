@@ -5,12 +5,12 @@
 
 DEVICE     = attiny45           # See avr-help for all possible devices
 #DEVICE     = attiny25           # See avr-help for all possible devices
-CLOCK      = 2000000            # Clock speed
+CLOCK      = 1000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
 PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
 
-# Internal oscillator @8MHz
-LFUSE      = 0x42
+# Internal oscillator @8MHz, divide clock by 8, fast startup
+#LFUSE      = 0x42
 
 # Serial Programming enabled, watchdog disabled, reset enabled, brown-out @1.8V
 HFUSE      = 0xDE
@@ -34,15 +34,14 @@ CXXFLAGS =
 # compiler options for C only
 CFLAGS = -std=c11
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -v -v -v
 
 C_FILES = \
-        hopebadge.c \
-	irremote.c \
-        sleep.c
+	hopebadge.c \
+	irreceiver.c \
+	sleep.c
 
-
-CPP_FILES = 
+CPP_FILES =
 
 OBJECTS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 

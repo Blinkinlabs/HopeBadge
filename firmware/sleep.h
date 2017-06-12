@@ -1,3 +1,11 @@
+#ifndef WATCHDOG_SLEEP_H
+#define WATCHDOG_SLEEP_H
+
+#include <avr/sleep.h>
+
+// Sleep and delay routines that use the internal watchdog as a timer source
+// Note that the minimum time resolution is 16ms.
+
 
 static inline void disable_watchdog() {
     cli();
@@ -5,7 +13,6 @@ static inline void disable_watchdog() {
     WDTCR = 0;
     sei();
 }
-
 
 // Sleep for the given number of counts with the specified prescaler bits
 static inline void sleep(uint8_t prescaler, int16_t counts) {
@@ -34,15 +41,11 @@ static inline void sleep_ms(int16_t milliseconds)
     sleep(0, milliseconds/16);
 }
 
-
 // Sleep for some time
-//
 static inline void sleep_s(int16_t seconds)
 {
     sleep(_BV(WDP2) | _BV(WDP1), seconds);
 }
-
-
 
 // Delay for the given number of counts with the specified prescaler bits
 static inline void delay(uint8_t prescaler, int16_t counts) {
@@ -68,10 +71,11 @@ static inline void delay_ms(int16_t milliseconds)
     delay(0, milliseconds/16);
 }
 
-
 // Delay for some time
-//
 static inline void delay_s(int16_t seconds)
 {
     delay(_BV(WDP2) | _BV(WDP1), seconds);
 }
+
+
+#endif

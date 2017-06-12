@@ -9,75 +9,23 @@
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
 #include <avr/wdt.h>
 
 #include "hopebadge.h"
 
-#include "irremote.h"
+#include "irreceiver.h"
 #include "sleep.h"
 
-uint8_t speed;
-uint8_t repeats;
-
-#ifdef SERIAL_DEBUG
-// Bitbang a 9600 baud serial output
-void pulse_out(uint8_t data) {
-    const uint8_t BIT_DELAY = 100; // ~9600 baud
-
-    // start bit
-    bit_clear(PORTB, PIN_UNUSED);
-    _delay_us(BIT_DELAY);
-
-    // data bits, lsb first
-    for(uint8_t bit = 0; bit < 8; bit++) {
-        if((data >> bit) & 1) {
-            bit_set(PORTB, PIN_UNUSED);
-        }
-        else {
-            bit_clear(PORTB, PIN_UNUSED);
-        }
-        _delay_us(BIT_DELAY);
-    }
-
-    // Stop bits
-    bit_set(PORTB, PIN_UNUSED);
-    _delay_us(BIT_DELAY);
-    _delay_us(BIT_DELAY);
-}
-#endif
-
-
-
 static inline void set_cpu_frequency_2mhz() {
-    // Change the clock to 4MHz
+    // Change the clock to 1MHz
     __asm__ volatile (
                       "st Z,%1" "\n\t"
                       "st Z,%2"
                       : :
                       "z" (&CLKPR),
                       "r" ((uint8_t) (1<<CLKPCE)),
-                      "r" ((uint8_t) 2)  // new CLKPR value 0=8MHz, 1=4MHz, 2=2MHz, 3=1MHz)
+                      "r" ((uint8_t) 1)  // new CLKPR value 0=8MHz, 1=4MHz, 2=2MHz, 3=1MHz)
                       );
-}
-
-
-static inline void enable_ir() {
-    bit_set(PORTB, PIN_IR_ENABLE);  // Power up IR receiver
-    PRR &= ~_BV(PRTIM0); // Turn on timer0 clock
-    enableIRIn(); // Start the IR receiver state machine
-}
-
-static inline bool check_any_ir() {
-    decodeIR();
-    return (results.transitions > 8);
-}
-
-static inline void disable_ir() {
-    disableIRIn();  // Disable IR receiver state machine
-    PRR |= _BV(PRTIM0); // Turn off timer0 clock
-    bit_clear(PORTB, PIN_IR_ENABLE); // Power down IR receiver
 }
 
 static void flash_lights(uint8_t count, uint8_t delay) {
@@ -140,21 +88,21 @@ static inline void setup() {
 
 static inline void loop() {
     // Enable IR receiver
-    enable_ir();
+    ir_start();
 
     // Wait for IR reciver
     delay_ms(IR_SEARCH_TIME);
 
     // If we are actively receiving a signal, wait a little longer
-    if(irActive()) {
+    if(ir_active()) {
       delay_ms(IR_RECEIVE_TIME);
     }
 
     // Disable IR receiver
-    disable_ir();
+    ir_stop();
 
     // If we saw some IR traffic
-    if(check_any_ir()) {
+    if(ir_received()) {
         flash_lights(FLASH_REPEAT_COUNT, FLASH_DELAY);
     }
     else {

@@ -1,8 +1,7 @@
 Makefile
 hopebadge.c
 hopebadge.h
-irremote.c
-irremote.h
-irremoteint.h
+irreceiver.c
+irreceiver.h
 sleep.c
 sleep.h
