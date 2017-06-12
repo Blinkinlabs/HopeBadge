@@ -11,7 +11,7 @@ def writeFuses(lfuse, hfuse, efuse):
     "avrdude",
     "-C", "+avrdude_gpio.conf", " ",
     "-c", "testrig",
-    "-p", "attiny45",
+    "-p", "attiny25",
     "-b", "200",
     "-e",
     "-U", "lfuse:w:%#02X:m" % lfuse,
@@ -44,7 +44,7 @@ def loadFlash(flashFile):
     "avrdude",
     "-C", "+avrdude_gpio.conf", " ",
     "-c", "testrig",
-    "-p", "attiny45",
+    "-p", "attiny25",
     "-b", "1",
     "-U" "flash:w:%s:i" % flashFile,
   ]
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
   print "PASS. Fuses written correctly"
 
-  returnCode = loadFlash("../../bin/hopebadge-v020.hex")
+  returnCode = loadFlash("../../bin/hopebadge-v030.hex")
 
   if (returnCode[0]!= 0):
     print "FAIL. Error programming flash!"

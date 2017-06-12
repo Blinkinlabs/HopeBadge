@@ -37,9 +37,9 @@ class HopeBadgeTests(unittest.TestCase):
 ### Power on tests
 
 #	def test_010_shortTest(self):
-#		self.dut.testrig.setPowerMode("limited")
-#		IIN_MIN = 30
-#		IIN_MAX = 80
+#		self.testrig.setPowerMode("limited")
+#		IIN_MIN = 0
+#		IIN_MAX = 20
 #
 #		time.sleep(3.5)
 #		power = self.dut.testrig.readDutPower()
@@ -49,9 +49,9 @@ class HopeBadgeTests(unittest.TestCase):
 #		self.assertLessEqual(power["Iin"],IIN_MAX)
 #
 #	def test_020_poweronTest(self):
-#		self.dut.testrig.setPowerMode("full")
-#		IIN_MIN = 30
-#		IIN_MAX = 60
+#		self.testrig.setPowerMode("full")
+#		IIN_MIN = 0
+#		IIN_MAX = 20
 #		VIN_MIN = 5
 #		VIN_MAX = 5.3
 #
@@ -74,7 +74,7 @@ class HopeBadgeTests(unittest.TestCase):
 		self.assertEqual(returnCode[0], 0)
 
 	def test_110_programFuses(self):
-                firmware = "../../bin/hopebadge-v020.hex"
+                firmware = "../../bin/hopebadge-v030.hex"
 
 		returnCode = avrdude.loadFlash(firmware)
 		self.assertEqual(returnCode[0], 0)
