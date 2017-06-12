@@ -1,0 +1,10 @@
+Makefile
+crc.c
+crc.h
+hopebadge.c
+hopebadge.h
+irremote.c
+irremote.h
+irremoteint.h
+sleep.c
+sleep.h
