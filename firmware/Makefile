@@ -39,7 +39,6 @@ AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 C_FILES = \
         hopebadge.c \
 	irremote.c \
-        crc.c \
         sleep.c
 
 

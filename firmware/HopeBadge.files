@@ -1,6 +1,4 @@
 Makefile
-crc.c
-crc.h
 hopebadge.c
 hopebadge.h
 irremote.c

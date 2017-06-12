@@ -16,7 +16,6 @@
 #include "hopebadge.h"
 
 #include "irremote.h"
-#include "crc.h"
 #include "sleep.h"
 
 uint8_t speed;
@@ -70,33 +69,8 @@ static inline void enable_ir() {
     enableIRIn(); // Start the IR receiver state machine
 }
 
-
-// Listen for an IR command
-// Duration: x seconds
-static inline bool check_ir() {
-    // If we didn't get an NEC command, bail
-    if (!decodeIR()) {
-        return false;
-    }
-
-    repeats =       (results.value >> 24) & 0xFF;
-    speed =         (results.value >> 16) & 0xFF;
-    uint8_t extra = (results.value >>  8) & 0xFF;
-
-    resetCRC();
-    updateCRC(speed);
-    updateCRC(repeats);
-    updateCRC(extra);
-
-    // If the CRC is valid, store the results.
-    if(getCRC() != (results.value & 0xFF)) {
-        return false;
-    }
-
-    return true;
-}
-
 static inline bool check_any_ir() {
+    decodeIR();
     return (results.transitions > 8);
 }
 
@@ -176,17 +150,11 @@ static inline void loop() {
       delay_ms(IR_RECEIVE_TIME);
     }
 
-
     // Disable IR receiver
     disable_ir();
 
-    // If a valid NEC code was detected, flash the lights using the received
-    // parameters
-    if(check_ir()) {
-        //flash_lights(repeats, speed);
-    }
-    // Otherwise, use a generic pattern
-    else if(check_any_ir()) {
+    // If we saw some IR traffic
+    if(check_any_ir()) {
         flash_lights(FLASH_REPEAT_COUNT, FLASH_DELAY);
     }
     else {
