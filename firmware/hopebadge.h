@@ -11,8 +11,9 @@
 
 
 // System parameters
-#define SLEEP_TIME		600 // Time to sleep between cycles, in ms
-#define IR_MONITOR_TIME         200 // Amount of time to stay awake for IR reception
+#define SLEEP_TIME		400 // Time to sleep between cycles, in ms
+#define IR_SEARCH_TIME          (16*2)  // Amount of time to stay awake searching for a signal
+#define IR_RECEIVE_TIME         100 // Amount of time to stay awake listening for a complete signal, after a search detects activity
 
 // Flash parameters
 #define FLASH_REPEAT_COUNT      30 // Number of times the LED flashing cycle s repeated

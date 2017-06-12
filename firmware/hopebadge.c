@@ -7,7 +7,6 @@
 
 #include <stdbool.h>
 #include <avr/sleep.h>
-#include <avr/delay.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -98,7 +97,7 @@ static inline bool check_ir() {
 }
 
 static inline bool check_any_ir() {
-    return (results.rawlen > 10);
+    return (results.transitions > 8);
 }
 
 static inline void disable_ir() {
@@ -170,11 +169,11 @@ static inline void loop() {
     enable_ir();
 
     // Wait for IR reciver
-    delay_ms(IR_MONITOR_TIME/2);
+    delay_ms(IR_SEARCH_TIME);
 
     // If we are actively receiving a signal, wait a little longer
-    if(isReceivingIR()) {
-      delay_ms(IR_MONITOR_TIME/2);
+    if(irActive()) {
+      delay_ms(IR_RECEIVE_TIME);
     }
 
 
@@ -184,7 +183,7 @@ static inline void loop() {
     // If a valid NEC code was detected, flash the lights using the received
     // parameters
     if(check_ir()) {
-        flash_lights(repeats, speed);
+        //flash_lights(repeats, speed);
     }
     // Otherwise, use a generic pattern
     else if(check_any_ir()) {

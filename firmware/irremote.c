@@ -31,7 +31,6 @@
 
 //// Arduino Shim //////
 #include <avr/io.h>
-#include <util/delay.h>
 
 #define OUTPUT 1
 #define INPUT 0
@@ -118,8 +117,7 @@ void enableIRIn() {
   irparams.rawlen = 0;
   irparams.timer = 0;
 
-  // set pin modes
-  //pinMode(irparams.recvpin, INPUT);
+  irparams.transitions = 0;
 }
 
 void disableIRIn() {
@@ -135,11 +133,17 @@ void disableIRIn() {
 // As soon as first MARK arrives, gap width is recorded, ready is cleared, and new logging starts
 
 uint8_t irdata;
+uint8_t lastIrdata;
 ISR(TIMER_INTR_NAME)
 {
   TIMER_RESET;
 
   irdata = ((PINB & _BV(PIN_IR_DATA))?SPACE:MARK);
+
+  if(lastIrdata != irdata) {
+    lastIrdata = irdata;
+    irparams.transitions += 1;
+  }
 
   irparams.timer++; // One more 50us tick
   if (irparams.rawlen >= RAWBUF) {
@@ -207,8 +211,9 @@ void resumeIR() {
   irparams.rawlen = 0;
 }
 
-bool isReceivingIR() {
-  return ((irparams.rawlen > 5) && (irparams.rcvstate != STATE_STOP));
+// True if any activity is being detected on the IR input
+bool irActive() {
+  return (irparams.transitions > 3);
 }
 
 
@@ -218,6 +223,7 @@ bool isReceivingIR() {
 int decodeIR() {
   results.rawbuf = irparams.rawbuf;
   results.rawlen = irparams.rawlen;
+  results.transitions = irparams.transitions;
   if (irparams.rcvstate != STATE_STOP) {
     return ERR;
   }

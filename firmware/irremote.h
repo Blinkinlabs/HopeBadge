@@ -37,6 +37,7 @@ typedef struct {
   uint8_t bits; // Number of bits in decoded value
   volatile uint8_t *rawbuf; // Raw intervals in .5 us ticks
   uint16_t rawlen; // Number of records in rawbuf.
+  uint8_t transitions; // Number of state transitions decoded
 } decode_results_t;
 
 // Values for decode_type
@@ -61,7 +62,7 @@ int decodeIR();
 void enableIRIn();
 void disableIRIn();
 void resumeIR();
-bool isReceivingIR();
+bool irActive();
 
 // Some useful constants
 

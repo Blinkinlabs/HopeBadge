@@ -214,6 +214,7 @@ typedef struct {
   uint16_t timer;     // state timer, counts 50uS ticks.
   uint8_t rawbuf[RAWBUF]; // raw data
   uint8_t rawlen;         // counter of entries in rawbuf
+  uint8_t transitions;    // Number of level transitions since start of scan
 } 
 irparams_t;
 

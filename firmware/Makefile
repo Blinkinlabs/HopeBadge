@@ -3,8 +3,8 @@
 # Derived from AVR Crosspack template
 #
 
-#DEVICE     = attiny45           # See avr-help for all possible devices
-DEVICE     = attiny25           # See avr-help for all possible devices
+DEVICE     = attiny45           # See avr-help for all possible devices
+#DEVICE     = attiny25           # See avr-help for all possible devices
 CLOCK      = 2000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
 PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
@@ -17,7 +17,7 @@ HFUSE      = 0xDE
 
 # Self-programming disabled
 EFUSE      = 0xFF
-FUSES      = -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m -U efuse:w:$(EFUSE):m  # settings as taken from http://www.engbedded.com/fusecalc/
+FUSES      = -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m -U efuse:w:$(EFUSE):m
 
 TARGET = hopebadge
 
