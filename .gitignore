@@ -2,6 +2,8 @@
 *.DS_Store
 *.swp
 *.lck
+*.pyc
+*.log
 
 # GNU/Make
 firmware/*.hex

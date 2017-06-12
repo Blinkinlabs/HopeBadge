@@ -2,7 +2,7 @@ import subprocess
 import time
 import sys
 
-def writeFuses(fuse, hfuse, efuse): 
+def writeFuses(lfuse, hfuse, efuse): 
   """
   Attempt to write the fuses of the attached Atmega device.
 

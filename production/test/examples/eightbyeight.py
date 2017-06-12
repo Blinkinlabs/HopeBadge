@@ -173,7 +173,7 @@ def testDigitalGpio():
 if __name__ == '__main__':
 	import time
 
-	dut = EightByEightTestRig()
+	dut = testrig.TestRig()
 
 	dut.reset()
 

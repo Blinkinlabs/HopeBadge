@@ -7,22 +7,20 @@ import blinkinlabsunittest
 #import redgreenunittest as unittest
 #import redgreenunittest
 
-import eightbyeight 
+import avrdude
+import testrig
+
 import RPi.GPIO as GPIO
 import time
 
 
-class LeoBlinky2016Tests(unittest.TestCase):
+class HopeBadgeTests(unittest.TestCase):
     	@classmethod
 	def setUpClass(self):
-		self.dut = eightbyeight.EightByEightTestRig()
-
 		self.results = {}
 
     	@classmethod
 	def tearDownClass(self):
-		self.dut.reset()
-
 		print(self.results)
 		print("\n")
 		with open("data.log", "a") as logfile:
@@ -30,11 +28,11 @@ class LeoBlinky2016Tests(unittest.TestCase):
 			logfile.write("\n")
 
 
-	def test_000_initDut(self):
-		self.dut.reset()
-
-		# Make sure the radio is disabled?
-		self.assertTrue(True)
+#	def test_000_initDut(self):
+#		self.dut.reset()
+#
+#		# Make sure the radio is disabled?
+#		self.assertTrue(True)
 
 ### Power on tests
 
@@ -67,60 +65,28 @@ class LeoBlinky2016Tests(unittest.TestCase):
 #		self.assertLessEqual(power["Vin"],VIN_MAX)
 
 
-# Kinetis programming tests
+	def test_100_writeFuses(self):
+  		lfuse    = 0x42
+		hfuse    = 0xDE
+		efuse    = 0xFF
 
+		returnCode = avrdude.writeFuses(lfuse, hfuse, efuse)
+		self.assertEqual(returnCode[0], 0)
 
-	def test_400_armEraseFlash(self):
-		self.dut.testrig.setPowerMode("full")
-		self.dut.testrig.enableUSB()
+	def test_110_programFuses(self):
+                firmware = "../../bin/hopebadge-v020.hex"
 
-		self.assertTrue(self.dut.armFlasher.eraseFlash())
-
-	def test_410_armProgramBootloader(self):
-		self.dut.testrig.setPowerMode("full")
-		self.dut.testrig.enableUSB()
-
-		self.assertTrue(self.dut.armFlasher.writeFirmware("../../bin/blinky-boot-v100.hex"))
-
-	def test_420_usbBootloaderMode(self):
-		self.dut.testrig.setPowerMode("full")
-		self.dut.testrig.enableUSB()
-
-		self.assertTrue(self.dut.checkForUsbBootloaderDevice())
-
-	def test_430_armProgramFirmware(self):
-		self.dut.testrig.setPowerMode("full")
-		self.dut.testrig.enableUSB()
-
-		self.assertTrue(self.dut.armFlasher.writeFirmware("../../bin/leoblinky-app-image-v100.hex"))
-
-
-	def test_440_usbApplicationMode(self):
-		self.dut.testrig.setPowerMode("full")
-		self.dut.testrig.enableUSB()
-
-		self.assertTrue(self.dut.checkForUsbDevice())
-
-	def test_450_readAcmDeviceInfo(self):
-
-		self.results["readAcmDeviceInfo"] = self.dut.readAcmDeviceInfo()
-
-
-# LED current tests
-
-# Radio test
-
-# Button test
-
+		returnCode = avrdude.loadFlash(firmware)
+		self.assertEqual(returnCode[0], 0)
 
 if __name__ == '__main__':
 	import userinterface
 	import colorama
 
-	rig = eightbyeight.EightByEightTestRig()
+	testrig = testrig.TestRig()
 
-	rig.testrig.setLED("pass", True)
-	rig.testrig.setLED("fail", True)
+	testrig.setLED("pass", True)
+	testrig.setLED("fail", True)
 
 	while True:
 		message = """
@@ -134,20 +100,20 @@ if __name__ == '__main__':
 		userinterface.interface.DisplayMessage(message, fgcolor=colorama.Fore.BLUE)
 
 
-		while (not rig.testrig.readStartButton()):
+		while (not testrig.readStartButton()):
 			pass
 	
-		rig.testrig.setLED("pass", True)
-		rig.testrig.setLED("fail", True)
+		testrig.setLED("pass", True)
+		testrig.setLED("fail", True)
 
 		#runner = unittest.TextTestRunner(failfast = True)
 		#runner = redgreenunittest.TextTestRunner(failfast = True)
 		runner = blinkinlabsunittest.BlinkinlabsTestRunner(failfast = True)
-		result = runner.run(unittest.TestLoader().loadTestsFromTestCase(LeoBlinky2016Tests))
+		result = runner.run(unittest.TestLoader().loadTestsFromTestCase(HopeBadgeTests))
 
 		if len(result.failures) > 0 or len(result.errors) > 0:
-			rig.testrig.setLED("pass", False)
-			rig.testrig.setLED("fail", True)
+			testrig.setLED("pass", False)
+			testrig.setLED("fail", True)
 			message = """
   ______      _____ _      
  |  ____/\   |_   _| |     
@@ -159,8 +125,8 @@ if __name__ == '__main__':
 			userinterface.interface.DisplayMessage(message, fgcolor=colorama.Fore.BLACK, bgcolor=colorama.Back.RED)
 
 		else:
-			rig.testrig.setLED("pass", True)
-			rig.testrig.setLED("fail", False)
+			testrig.setLED("pass", True)
+			testrig.setLED("fail", False)
 
 			message = """
   ____     _   __
