@@ -7,10 +7,11 @@ DEVICE     = attiny45           # See avr-help for all possible devices
 #DEVICE     = attiny25           # See avr-help for all possible devices
 CLOCK      = 1000000            # Clock speed
 #PROGRAMMER = -c usbtiny -P usb	# For using Adafruit USBtiny
-PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
+#PROGRAMMER = -c avrisp2		# For using AVR ISP MK2
+PROGRAMMER = -C+../production/test/avrdude_gpio.conf -c testrig 	# For using AVR ISP MK2
 
 # Internal oscillator @8MHz, divide clock by 8, fast startup
-#LFUSE      = 0x42
+LFUSE      = 0x42
 
 # Serial Programming enabled, watchdog disabled, reset enabled, brown-out @1.8V
 HFUSE      = 0xDE
@@ -34,7 +35,7 @@ CXXFLAGS =
 # compiler options for C only
 CFLAGS = -std=c11
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -v -v -v
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 
 C_FILES = \
 	hopebadge.c \

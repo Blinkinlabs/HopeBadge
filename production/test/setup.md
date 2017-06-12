@@ -40,9 +40,9 @@ make install
 
 # Install avrdude
 
-	wget http://download.savannah.gnu.org/releases/avrdude/avrdude-6.3.tar.gz
-	tar xfv avrdude-6.3.tar.gz
-	cd avrdude-6.3
+	wget http://download.savannah.gnu.org/releases/avrdude/avrdude-6.2.tar.gz
+	tar xfv avrdude-6.2.tar.gz
+	cd avrdude-6.2
 	./bootstrap
 	./configure --enable-linuxgpio
 	make
