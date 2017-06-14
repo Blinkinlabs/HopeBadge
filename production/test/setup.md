@@ -7,7 +7,7 @@ Setup instructions for 'Raspbian Jessie Lite'
 # Get the system up to date
 
 	sudo apt-get update
-	sudo apt-get install build-essential git libtool automake libusb-1.0.0-dev python-smbus python-serial i2c-tools vim screen python-dev python-pip gcc-arm-none-eabi dfu-uitl python-colorama python-rpi.gpio
+	sudo apt-get install build-essential git libtool automake libusb-1.0.0-dev python-smbus python-serial i2c-tools vim screen python-dev python-pip gcc-arm-none-eabi dfu-uitl python-colorama python-rpi.gpio autopep8
 
 
 # Install openocd

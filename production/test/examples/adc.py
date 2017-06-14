@@ -28,7 +28,7 @@ adc1 = Adafruit_ADS1x15.ADS1015(address=0x48)
 #  -   8 = +/-0.512V
 #  -  16 = +/-0.256V
 # See table 3 in the ADS1015/ADS1115 datasheet for more info on gain.
-GAIN = 2/3
+GAIN = 2 / 3
 
 
 print('Reading ADS1x15 values, press Ctrl-C to quit...')
@@ -38,7 +38,7 @@ print('-' * 73)
 # Main loop.
 while True:
     # Read all the ADC channel values in a list.
-    values = [0]*4
+    values = [0] * 4
     for i in range(4):
         # Read the specified ADC channel using the previously set gain value.
         values[i] = adc1.read_adc(i, gain=GAIN)
