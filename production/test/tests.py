@@ -19,7 +19,7 @@ class HopeBadgeTests(unittest.TestCase):
 	reset_pin = "JTAG_RESET"
         led_1_pin = "JTAG_TDI"
         led_2_pin = "JTAG_TDO"
-#	led_3_pin = ""
+	led_3_pin = "2"
 	ir_en_pin = "JTAG_TCK"
 
     	@classmethod
@@ -36,8 +36,8 @@ class HopeBadgeTests(unittest.TestCase):
 		rig.digitalPinMode(self.led_2_pin, GPIO.OUT)
 		rig.digitalPinWrite(self.led_2_pin, GPIO.HIGH)
 
-#		rig.digitalPinMode(self.led_3_pin, GPIO.OUT)
-#		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
+		rig.digitalPinMode(self.led_3_pin, GPIO.OUT)
+		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
 
 		rig.digitalPinMode(self.ir_en_pin, GPIO.OUT)
 		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
@@ -49,7 +49,7 @@ class HopeBadgeTests(unittest.TestCase):
 		rig.digitalPinMode(self.reset_pin, GPIO.IN)
 		rig.digitalPinMode(self.led_1_pin, GPIO.IN)
 		rig.digitalPinMode(self.led_2_pin, GPIO.IN)
-#		rig.digitalPinMode(self.led_3_pin, GPIO.IN)
+		rig.digitalPinMode(self.led_3_pin, GPIO.IN)
 		rig.digitalPinMode(self.ir_en_pin, GPIO.IN)
 
 		print(self.results)
@@ -124,20 +124,19 @@ class HopeBadgeTests(unittest.TestCase):
 		self.assertGreaterEqual(power["I"],IIN_MIN)
 		self.assertLessEqual(power["I"],IIN_MAX)
 
-# TODO: Wire this LED so it can be controlled
-#	def test_120_led3Test(self):
-#		IIN_MIN = 10
-#		IIN_MAX = 14
-#
-#		rig.digitalPinWrite(self.led_3_pin, GPIO.LOW)
-#
-#		power = rig.readDutPower()
-#
-#		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
-#
-#		self.results["led3Test_power"] = power
-#		self.assertGreaterEqual(power["I"],IIN_MIN)
-#		self.assertLessEqual(power["I"],IIN_MAX)
+	def test_120_led3Test(self):
+		IIN_MIN = 10
+		IIN_MAX = 14
+
+		rig.digitalPinWrite(self.led_3_pin, GPIO.LOW)
+
+		power = rig.readDutPower()
+
+		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
+
+		self.results["led3Test_power"] = power
+		self.assertGreaterEqual(power["I"],IIN_MIN)
+		self.assertLessEqual(power["I"],IIN_MAX)
 
 	def test_130_irReceiverTest(self):
 		IIN_MIN = -1
