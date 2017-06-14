@@ -61,13 +61,11 @@ class HopeBadgeTests(unittest.TestCase):
 
 ### Power on tests
 	def test_010_shortTest(self):
-		# TODO: Pull reset low
-
 		rig.setPowerMode("limited")
 		IIN_MIN = -1
 		IIN_MAX = 1
-		VIN_MIN = 3.2
-		VIN_MAX = 3.4
+		VIN_MIN = 3.1
+		VIN_MAX = 3.5
 
 		power = rig.readDutPower()
 		print(power)
@@ -79,12 +77,11 @@ class HopeBadgeTests(unittest.TestCase):
 		self.assertLessEqual(power["Vbus"],VIN_MAX)
 
 	def test_020_poweronTest(self):
-		# TODO: Pull reset low
 		rig.setPowerMode("full")
 		IIN_MIN = -1
 		IIN_MAX = 1
-		VIN_MIN = 3.2
-		VIN_MAX = 3.4
+		VIN_MIN = 3.1
+		VIN_MAX = 3.5
 
 		power = rig.readDutPower()
 		self.results["poweronTest_power"] = power
@@ -97,7 +94,7 @@ class HopeBadgeTests(unittest.TestCase):
 # Peripheral power draw test
 
 	def test_100_led1Test(self):
-		IIN_MIN = 10
+		IIN_MIN = 9
 		IIN_MAX = 14
 
 		rig.digitalPinWrite(self.led_1_pin, GPIO.LOW)
@@ -111,7 +108,7 @@ class HopeBadgeTests(unittest.TestCase):
 		self.assertLessEqual(power["I"],IIN_MAX)
 
 	def test_110_led2Test(self):
-		IIN_MIN = 10
+		IIN_MIN = 9
 		IIN_MAX = 14
 
 		rig.digitalPinWrite(self.led_2_pin, GPIO.LOW)
@@ -125,7 +122,7 @@ class HopeBadgeTests(unittest.TestCase):
 		self.assertLessEqual(power["I"],IIN_MAX)
 
 	def test_120_led3Test(self):
-		IIN_MIN = 10
+		IIN_MIN = 9
 		IIN_MAX = 14
 
 		rig.digitalPinWrite(self.led_3_pin, GPIO.LOW)
