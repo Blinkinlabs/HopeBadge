@@ -20,7 +20,8 @@ class HopeBadgeTests(unittest.TestCase):
         led_1_pin = "JTAG_TDI"
         led_2_pin = "JTAG_TDO"
 	led_3_pin = "2"
-	ir_en_pin = "JTAG_TCK"
+#	ir_en_pin = "JTAG_TCK"
+#	ir_data_pin = "1"
 
     	@classmethod
 	def setUpClass(self):
@@ -39,8 +40,8 @@ class HopeBadgeTests(unittest.TestCase):
 		rig.digitalPinMode(self.led_3_pin, GPIO.OUT)
 		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
 
-		rig.digitalPinMode(self.ir_en_pin, GPIO.OUT)
-		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
+#		rig.digitalPinMode(self.ir_en_pin, GPIO.OUT)
+#		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
 
     	@classmethod
 	def tearDownClass(self):
@@ -50,7 +51,7 @@ class HopeBadgeTests(unittest.TestCase):
 		rig.digitalPinMode(self.led_1_pin, GPIO.IN)
 		rig.digitalPinMode(self.led_2_pin, GPIO.IN)
 		rig.digitalPinMode(self.led_3_pin, GPIO.IN)
-		rig.digitalPinMode(self.ir_en_pin, GPIO.IN)
+#		rig.digitalPinMode(self.ir_en_pin, GPIO.IN)
 
 		print(self.results)
 		print("\n")
@@ -135,19 +136,19 @@ class HopeBadgeTests(unittest.TestCase):
 		self.assertGreaterEqual(power["I"],IIN_MIN)
 		self.assertLessEqual(power["I"],IIN_MAX)
 
-	def test_130_irReceiverTest(self):
-		IIN_MIN = -1
-		IIN_MAX = 3
-
-		rig.digitalPinWrite(self.ir_en_pin, GPIO.HIGH)
-
-		power = rig.readDutPower()
-
-		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
-
-		self.results["irReceiver_power"] = power
-		self.assertGreaterEqual(power["I"],IIN_MIN)
-		self.assertLessEqual(power["I"],IIN_MAX)
+#	def test_130_irReceiverTest(self):
+#		IIN_MIN = -1
+#		IIN_MAX = 3
+#
+#		rig.digitalPinWrite(self.ir_en_pin, GPIO.HIGH)
+#
+#		power = rig.readDutPower()
+#
+#		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
+#
+#		self.results["irReceiver_power"] = power
+#		self.assertGreaterEqual(power["I"],IIN_MIN)
+#		self.assertLessEqual(power["I"],IIN_MAX)
 
 
 # ICSP tests
@@ -159,7 +160,7 @@ class HopeBadgeTests(unittest.TestCase):
 		returnCode = avrdude.writeFuses(lfuse, hfuse, efuse)
 		self.assertEqual(returnCode[0], 0)
 
-	def test_210_programFuses(self):
+	def test_210_programFirmware(self):
                 firmware = "../../bin/hopebadge-v030.hex"
 
 		returnCode = avrdude.loadFlash(firmware)
