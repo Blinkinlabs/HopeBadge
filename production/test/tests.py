@@ -10,6 +10,7 @@ import testrig
 import RPi.GPIO as GPIO
 import time
 
+import os.path
 
 class HopeBadgeTests(unittest.TestCase):
     reset_pin = "JTAG_RESET"
@@ -62,7 +63,7 @@ class HopeBadgeTests(unittest.TestCase):
 
 
 # Power on tests
-    def test_010_shortTest(self):
+    def test_010_short(self):
         rig.setPowerMode("limited")
         IIN_MIN = -1
         IIN_MAX = 1
@@ -77,7 +78,7 @@ class HopeBadgeTests(unittest.TestCase):
         self.assertGreaterEqual(power["Vbus"], VIN_MIN)
         self.assertLessEqual(power["Vbus"], VIN_MAX)
 
-    def test_020_poweronTest(self):
+    def test_020_powerOn(self):
         rig.setPowerMode("full")
         IIN_MIN = -1
         IIN_MAX = 1
@@ -94,7 +95,7 @@ class HopeBadgeTests(unittest.TestCase):
 
 # Peripheral power draw test
 
-    def test_100_led1Test(self):
+    def test_100_led1(self):
         IIN_MIN = 9
         IIN_MAX = 14
 
@@ -108,7 +109,7 @@ class HopeBadgeTests(unittest.TestCase):
         self.assertGreaterEqual(power["I"], IIN_MIN)
         self.assertLessEqual(power["I"], IIN_MAX)
 
-    def test_110_led2Test(self):
+    def test_110_led2(self):
         IIN_MIN = 9
         IIN_MAX = 14
 
@@ -122,7 +123,7 @@ class HopeBadgeTests(unittest.TestCase):
         self.assertGreaterEqual(power["I"], IIN_MIN)
         self.assertLessEqual(power["I"], IIN_MAX)
 
-    def test_120_led3Test(self):
+    def test_120_led3(self):
         IIN_MIN = 9
         IIN_MAX = 14
 
@@ -136,7 +137,7 @@ class HopeBadgeTests(unittest.TestCase):
         self.assertGreaterEqual(power["I"], IIN_MIN)
         self.assertLessEqual(power["I"], IIN_MAX)
 
-#   def test_130_irReceiverTest(self):
+#   def test_130_irReceiver(self):
 #       IIN_MIN = -1
 #       IIN_MAX = 3
 #
@@ -152,19 +153,41 @@ class HopeBadgeTests(unittest.TestCase):
 
 
 # ICSP tests
-    def test_200_writeFuses(self):
+    def test_200_clearExports(self):
+        """
+        Sometimes avrdude might mess up and leave some gpio
+        pins mapped, so let's unexport them to be safe.
+        """
+        pins = ["7", "9", "10", "11"]
+
+        for pin in pins:
+            if os.path.isdir("/sys/class/gpio/gpio" + pin):
+                with open("/sys/class/gpio/unexport", "w") as f:
+                    f.write(pin)
+
+    def test_210_writeFuses(self):
+        """
+        Write the fuses, using a slow ICSP communication speed
+        """
         lfuse = 0x42
         hfuse = 0xDE
         efuse = 0xFF
 
-        returnCode = avrdude.writeFuses(lfuse, hfuse, efuse)
-        self.assertEqual(returnCode[0], 0)
+        results = avrdude.writeFuses(lfuse, hfuse, efuse)
+        self.results["writeFusesTest_result"]=results
 
-    def test_210_programFirmware(self):
+        self.assertEqual(results[0], 0)
+
+    def test_220_programFirmware(self):
+        """
+        Program the firmware, using a faster ICSP communication speed
+        """
         firmware = "../../bin/hopebadge-v030.hex"
 
-        returnCode = avrdude.loadFlash(firmware)
-        self.assertEqual(returnCode[0], 0)
+        results = avrdude.loadFlash(firmware)
+        self.results["programFirwareTest_result"]=results
+
+        self.assertEqual(results[0], 0)
 
 
 if __name__ == '__main__':
@@ -194,8 +217,6 @@ if __name__ == '__main__':
         rig.setLED("pass", True)
         rig.setLED("fail", True)
 
-        #runner = unittest.TextTestRunner(failfast = True)
-        #runner = redgreenunittest.TextTestRunner(failfast = True)
         runner = blinkinlabsunittest.BlinkinlabsTestRunner(failfast=True)
         result = runner.run(
             unittest.TestLoader().loadTestsFromTestCase(HopeBadgeTests))

@@ -1,6 +1,6 @@
 
-
-import subprocess
+#import subprocess
+import subprocess32 as subprocess
 import time
 import sys
 
@@ -24,7 +24,7 @@ def writeFuses(lfuse, hfuse, efuse):
 
     s = open('result.log', 'w')
     e = open('errorresult.log', 'w')
-    result = subprocess.call(command, stdout=s, stderr=e)
+    result = subprocess.call(command, stdout=s, stderr=e, timeout=3)
     s.close()
     e.close()
 
@@ -55,7 +55,7 @@ def loadFlash(flashFile):
 
     s = open('result.log', 'w')
     e = open('errorresult.log', 'w')
-    result = subprocess.call(command, stdout=s, stderr=e)
+    result = subprocess.call(command, stdout=s, stderr=e, timeout=3)
     s.close()
     e.close()
 

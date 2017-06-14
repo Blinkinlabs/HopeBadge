@@ -99,7 +99,7 @@ class BlinkinlabsTestResult(unittest.TestResult):
     @failfast
     def addError(self, test, err):
         unittest.TestResult.addError(self, test, err)
-        self.interface.DisplayError()
+        self.interface.DisplayError(err)
         #self.l.TestError(test, err)
 
     @failfast
