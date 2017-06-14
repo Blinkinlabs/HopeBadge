@@ -14,13 +14,44 @@ import RPi.GPIO as GPIO
 import time
 
 
+
 class HopeBadgeTests(unittest.TestCase):
+	reset_pin = "JTAG_RESET"
+        led_1_pin = "JTAG_TDI"
+        led_2_pin = "JTAG_TDO"
+#	led_3_pin = ""
+	ir_en_pin = "JTAG_TCK"
+
     	@classmethod
 	def setUpClass(self):
 		self.results = {}
 
+		# Pull the reset line low
+		rig.digitalPinMode(self.reset_pin, GPIO.OUT)
+		rig.digitalPinWrite(self.reset_pin, GPIO.LOW)
+
+		rig.digitalPinMode(self.led_1_pin, GPIO.OUT)
+		rig.digitalPinWrite(self.led_1_pin, GPIO.HIGH)
+
+		rig.digitalPinMode(self.led_2_pin, GPIO.OUT)
+		rig.digitalPinWrite(self.led_2_pin, GPIO.HIGH)
+
+#		rig.digitalPinMode(self.led_3_pin, GPIO.OUT)
+#		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
+
+		rig.digitalPinMode(self.ir_en_pin, GPIO.OUT)
+		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
+
     	@classmethod
 	def tearDownClass(self):
+		rig.setPowerMode("off")
+
+		rig.digitalPinMode(self.reset_pin, GPIO.IN)
+		rig.digitalPinMode(self.led_1_pin, GPIO.IN)
+		rig.digitalPinMode(self.led_2_pin, GPIO.IN)
+#		rig.digitalPinMode(self.led_3_pin, GPIO.IN)
+		rig.digitalPinMode(self.ir_en_pin, GPIO.IN)
+
 		print(self.results)
 		print("\n")
 		with open("data.log", "a") as logfile:
@@ -28,44 +59,103 @@ class HopeBadgeTests(unittest.TestCase):
 			logfile.write("\n")
 
 
-#	def test_000_initDut(self):
-#		self.dut.reset()
-#
-#		# Make sure the radio is disabled?
-#		self.assertTrue(True)
-
 ### Power on tests
+	def test_010_shortTest(self):
+		# TODO: Pull reset low
 
-#	def test_010_shortTest(self):
-#		self.testrig.setPowerMode("limited")
-#		IIN_MIN = 0
-#		IIN_MAX = 20
+		rig.setPowerMode("limited")
+		IIN_MIN = -1
+		IIN_MAX = 1
+		VIN_MIN = 3.2
+		VIN_MAX = 3.4
+
+		power = rig.readDutPower()
+		print(power)
+		self.results["shortTest_power"] = power
+
+		self.assertGreaterEqual(power["I"],IIN_MIN)
+		self.assertLessEqual(power["I"],IIN_MAX)
+		self.assertGreaterEqual(power["Vbus"],VIN_MIN)
+		self.assertLessEqual(power["Vbus"],VIN_MAX)
+
+	def test_020_poweronTest(self):
+		# TODO: Pull reset low
+		rig.setPowerMode("full")
+		IIN_MIN = -1
+		IIN_MAX = 1
+		VIN_MIN = 3.2
+		VIN_MAX = 3.4
+
+		power = rig.readDutPower()
+		self.results["poweronTest_power"] = power
+
+		self.assertGreaterEqual(power["I"],IIN_MIN)
+		self.assertLessEqual(power["I"],IIN_MAX)
+		self.assertGreaterEqual(power["Vbus"],VIN_MIN)
+		self.assertLessEqual(power["Vbus"],VIN_MAX)
+
+# Peripheral power draw test
+
+	def test_100_led1Test(self):
+		IIN_MIN = 10
+		IIN_MAX = 14
+
+		rig.digitalPinWrite(self.led_1_pin, GPIO.LOW)
+
+		power = rig.readDutPower()
+
+		rig.digitalPinWrite(self.led_1_pin, GPIO.HIGH)
+
+		self.results["led1Test_power"] = power
+		self.assertGreaterEqual(power["I"],IIN_MIN)
+		self.assertLessEqual(power["I"],IIN_MAX)
+
+	def test_110_led2Test(self):
+		IIN_MIN = 10
+		IIN_MAX = 14
+
+		rig.digitalPinWrite(self.led_2_pin, GPIO.LOW)
+
+		power = rig.readDutPower()
+
+		rig.digitalPinWrite(self.led_2_pin, GPIO.HIGH)
+
+		self.results["led2Test_power"] = power
+		self.assertGreaterEqual(power["I"],IIN_MIN)
+		self.assertLessEqual(power["I"],IIN_MAX)
+
+# TODO: Wire this LED so it can be controlled
+#	def test_120_led3Test(self):
+#		IIN_MIN = 10
+#		IIN_MAX = 14
 #
-#		time.sleep(3.5)
-#		power = self.dut.testrig.readDutPower()
-#		self.results["shortTest_power"] = power
+#		rig.digitalPinWrite(self.led_3_pin, GPIO.LOW)
 #
-#		self.assertGreaterEqual(power["Iin"],IIN_MIN)
-#		self.assertLessEqual(power["Iin"],IIN_MAX)
+#		power = rig.readDutPower()
 #
-#	def test_020_poweronTest(self):
-#		self.testrig.setPowerMode("full")
-#		IIN_MIN = 0
-#		IIN_MAX = 20
-#		VIN_MIN = 5
-#		VIN_MAX = 5.3
+#		rig.digitalPinWrite(self.led_3_pin, GPIO.HIGH)
 #
-#		time.sleep(.5)
-#		power = self.dut.testrig.readDutPower()
-#		self.results["poweronTest_power"] = power
-#
-#		self.assertGreaterEqual(power["Iin"],IIN_MIN)
-#		self.assertLessEqual(power["Iin"],IIN_MAX)
-#		self.assertGreaterEqual(power["Vin"],VIN_MIN)
-#		self.assertLessEqual(power["Vin"],VIN_MAX)
+#		self.results["led3Test_power"] = power
+#		self.assertGreaterEqual(power["I"],IIN_MIN)
+#		self.assertLessEqual(power["I"],IIN_MAX)
+
+	def test_130_irReceiverTest(self):
+		IIN_MIN = -1
+		IIN_MAX = 3
+
+		rig.digitalPinWrite(self.ir_en_pin, GPIO.HIGH)
+
+		power = rig.readDutPower()
+
+		rig.digitalPinWrite(self.ir_en_pin, GPIO.LOW)
+
+		self.results["irReceiver_power"] = power
+		self.assertGreaterEqual(power["I"],IIN_MIN)
+		self.assertLessEqual(power["I"],IIN_MAX)
 
 
-	def test_100_writeFuses(self):
+# ICSP tests
+	def test_200_writeFuses(self):
   		lfuse    = 0x42
 		hfuse    = 0xDE
 		efuse    = 0xFF
@@ -73,20 +163,22 @@ class HopeBadgeTests(unittest.TestCase):
 		returnCode = avrdude.writeFuses(lfuse, hfuse, efuse)
 		self.assertEqual(returnCode[0], 0)
 
-	def test_110_programFuses(self):
+	def test_210_programFuses(self):
                 firmware = "../../bin/hopebadge-v030.hex"
 
 		returnCode = avrdude.loadFlash(firmware)
 		self.assertEqual(returnCode[0], 0)
 
+
+
 if __name__ == '__main__':
 	import userinterface
 	import colorama
 
-	testrig = testrig.TestRig()
+	rig = testrig.TestRig()
 
-	testrig.setLED("pass", True)
-	testrig.setLED("fail", True)
+	rig.setLED("pass", True)
+	rig.setLED("fail", True)
 
 	while True:
 		message = """
@@ -100,11 +192,11 @@ if __name__ == '__main__':
 		userinterface.interface.DisplayMessage(message, fgcolor=colorama.Fore.BLUE)
 
 
-		while (not testrig.readStartButton()):
+		while (not rig.readStartButton()):
 			pass
 	
-		testrig.setLED("pass", True)
-		testrig.setLED("fail", True)
+		rig.setLED("pass", True)
+		rig.setLED("fail", True)
 
 		#runner = unittest.TextTestRunner(failfast = True)
 		#runner = redgreenunittest.TextTestRunner(failfast = True)
@@ -112,8 +204,8 @@ if __name__ == '__main__':
 		result = runner.run(unittest.TestLoader().loadTestsFromTestCase(HopeBadgeTests))
 
 		if len(result.failures) > 0 or len(result.errors) > 0:
-			testrig.setLED("pass", False)
-			testrig.setLED("fail", True)
+			rig.setLED("pass", False)
+			rig.setLED("fail", True)
 			message = """
   ______      _____ _      
  |  ____/\   |_   _| |     
@@ -125,8 +217,8 @@ if __name__ == '__main__':
 			userinterface.interface.DisplayMessage(message, fgcolor=colorama.Fore.BLACK, bgcolor=colorama.Back.RED)
 
 		else:
-			testrig.setLED("pass", True)
-			testrig.setLED("fail", False)
+			rig.setLED("pass", True)
+			rig.setLED("fail", False)
 
 			message = """
   ____     _   __

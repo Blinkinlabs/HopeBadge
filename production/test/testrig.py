@@ -103,10 +103,10 @@ class TestRig:
 
 	def readDutPower(self):
 		values = {}
-
 		self.dutCurrent.measure()
-		values["Iin"] = self.dutCurrent.getCurrent_mA()
-		values["Vin"] = self.dutCurrent.getBusVoltage_V()
+		values["Vbus"] = self.dutCurrent.getBusVoltage_V()
+		values["I"] = self.dutCurrent.getCurrent_mA()
+		values["P"] = self.dutCurrent.getPower_mW()
 		return values
 	
 	def readVoltage(self, pin):

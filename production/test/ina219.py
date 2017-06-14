@@ -103,16 +103,16 @@ class INA219:
 # ===========================================================================
 
 	# Constructor
-	def __init__(self, address=0x40, i2c=None, resistance=.1, debug=False, **kwargs):
+	def __init__(self, address=0x40, i2c=None, resistance=.1, **kwargs):
 		if i2c is None:
 			import Adafruit_GPIO.I2C as I2C
 			i2c = I2C
 		self._device = i2c.get_i2c_device(address, **kwargs)
 		self.address = address
-		self.debug = debug
 
 		self.reset()
-		self.ina219SetCalibration(resistance, gain=4)
+		self.ina219SetCalibration(resistance, gain=1, voltageRange=16, maxAmps=.25)
+	        self.getBusVoltage_raw()
 
 	def twosToInt(self, val, len):
 		# Convert twos compliment to integer
@@ -135,7 +135,9 @@ class INA219:
 		bytes = [(config >> 8) & 0xFF,  config & 0xFF]
 		self._device.writeList(self.__INA219_REG_CONFIG, bytes)
 
-	def ina219SetCalibration(self, resistance, gain=8, voltageRange=32, maxAmps=4):
+	def ina219SetCalibration(self, resistance, gain, voltageRange, maxAmps):
+                # Note: Make sure to set maxAmps so that calibration does not overflow.
+
 		self.currentLSB = float(maxAmps)/pow(2,15)
 		self.gain = gain
 		
@@ -167,7 +169,7 @@ class INA219:
 		# Slowest, most accurate current sampling
 		config |= self.__INA219_CONFIG_SADCRES_12BIT_128S_69MS
 
-		# and run in continuous mode
+		# and set to power-down mode
 		#config |= self.__INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS
 		#config |= self.__INA219_CONFIG_MODE_SANDBVOLT_TRIGGERED
 
@@ -187,6 +189,7 @@ class INA219:
 
 		# then wait for it to complete
 		while(True):
+			time.sleep(.05)
 			result = self._device.readU16(self.__INA219_REG_BUSVOLTAGE, little_endian=False)
 
 			if (result & self.__INA219_BUSVOLTAGE_CNVR):
@@ -244,7 +247,7 @@ class INA219:
 		
 	def getPower_mW(self):
 		valueDec = self.getPower_raw()
-		valueDec *= self.currentLSB*20
+		valueDec *= self.currentLSB*20*1000
 		return valueDec
 
 
