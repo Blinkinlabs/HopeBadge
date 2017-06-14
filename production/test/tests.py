@@ -100,7 +100,6 @@ class HopeBadgeTests(unittest.TestCase):
         IIN_MAX = 14
 
         rig.digitalPinWrite(self.led_1_pin, GPIO.LOW)
-
         power = rig.readDutPower()
 
         rig.digitalPinWrite(self.led_1_pin, GPIO.HIGH)

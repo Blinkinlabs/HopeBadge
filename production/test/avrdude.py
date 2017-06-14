@@ -16,6 +16,7 @@ def writeFuses(lfuse, hfuse, efuse):
         "-c", "testrig",
         "-p", "attiny25",
         "-b", "200",
+        "-q", "-u",
         "-e",
         "-U", "lfuse:w:%#02X:m" % lfuse,
         "-U", "hfuse:w:%#02X:m" % hfuse,
@@ -50,6 +51,7 @@ def loadFlash(flashFile):
         "-c", "testrig",
         "-p", "attiny25",
         "-b", "1",
+        "-q", "-u",
         "-U" "flash:w:%s:i" % flashFile,
     ]
 
