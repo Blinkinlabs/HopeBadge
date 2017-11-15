@@ -17,7 +17,10 @@ firmware/*.dfu
 *.?##
 
 # Altium
-pcb/History
-pcb/__Previews
-pcb/Project\ Logs\ for\ *
-pcb/Project\ Outputs\ for\ *
+*/History
+*/__Previews
+*Project\ Logs\ for\ *
+*/Project\ Outputs\ for\ *
+*/debug.log
+*/*.PrjPcbStructure
+*/.Cam
