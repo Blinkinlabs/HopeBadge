@@ -1,0 +1,22 @@
+Altium Designer Pick and Place Locations
+C:\Users\matt\Blinkinlabs-Repos\HopeBadge\pcb\Project Outputs for Hope Badge\Pick Place\Pick Place for Hope Badge.txt
+
+========================================================================================================================
+File Design Information:
+
+Date:       12-05-18
+Time:       11:34
+Revision:   b6f9bd0dd4e28a4b4c8d9bf67d3468bb4aa0a8a7
+Variant:    No variations
+Units used: mm
+
+Designator Comment                     Layer       Footprint            Center-X(mm) Center-Y(mm) Rotation Description                                                                                                                                          
+DS1        LTW-C191TS5                 TopLayer    LTST-LTW-C191TS5_V   40.0000      -5.0000      90       "LED Uni-Color White, 70 mW, 20 mA, -20 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel"                                                                  
+DS2        LTW-C191TS5                 TopLayer    LTST-LTW-C191TS5_V   65.0000      -6.0000      90       "LED Uni-Color White, 70 mW, 20 mA, -20 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel"                                                                  
+DS3        LTW-C191TS5                 TopLayer    LTST-LTW-C191TS5_V   57.0000      13.2500      90       "LED Uni-Color White, 70 mW, 20 mA, -20 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel"                                                                  
+U1         ATtiny85V-10SUR             BottomLayer 8S2_M                41.0000      2.0000       90       "8-bit AVR Microcontroller, 10MHz, 1.8-5.5V, 8K Flash, 512 Bytes EEPROM, 512 Bytes SRAM, Industrial Grade (-40°C to 85°C), 8-Lead SOIC, Pb-Free, Reel" 
+R1         RC0402JR-0775RL             BottomLayer RESC1005X40X25ML5T10 42.0000      -5.0000      90       "Chip Resistor, 75 Ohm, +/- 5%, 0.063 W, -55 to 155 degC, 0402 (1005 Metric), RoHS, Tape and Reel"                                                   
+S1         JOY                         BottomLayer TS-1185              35.0000      -4.0000      270      "Tact Switch, 3x4mm, no alignment pin, turtle style"                                                                                                 
+C1         "CAP 100nF 6.3V 0402(1005)" BottomLayer CAPC0402(1005)60_N   45.0000      6.0000       270      "CAP 100nF 6.3V -20% to +80% 0402 (1005 Metric) Thickness 0.6mm SMD"                                                                                 
+U2         UIRM238C                    BottomLayer UIRM238C             46.0000      8.5000       180      "Infrared Receiver Module"                                                                                                                           
+BT1        BK-913-TR                   BottomLayer MPD-BK-913-3_V       60.0000      5.0000       90       "Battery Retainer for 20 mm Dia. Batteries, RoHS, Bag"                                                                                               
